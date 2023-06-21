@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Shows time in seconds of TTFB and TTLB
 # 
-# Usage: ttfbcd url
+# Usage: ttcd url
 #
 # Inspiration from 
 # https://gist.github.com/sandeepraju/1f5fbdbdd89551ba7925abe2645f92b5
