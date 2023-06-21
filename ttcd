@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+# Shows time in seconds of TTFB and TTLB
+# 
+# Usage: ttfbcd url
+#
+# Inspiration from 
+# https://gist.github.com/sandeepraju/1f5fbdbdd89551ba7925abe2645f92b5
+# by https://github.com/sandeepraju
+# https://github.com/jaygooby/ttfb.sh
+# https://blog.cloudflare.com/a-question-of-timing/
+#
+# Ensure curl uses period separators for floating point values, which
+# bc requires to do calculations (i.e. it can't use locale separators like ,)
+if (locale -a | egrep ^C.UTF-8$ > /dev/null); then
+  export LC_ALL=C.UTF-8
+else
+  export LC_ALL=C
+fi
+
+# check curl can use http2
+HTTP_VERSION="--http2"
+curl -so /dev/null --http2 https://example.com || HTTP_VERSION="--http1.1"
+
+options=()
+options+=(-o /dev/null)
+options+=(-s)
+options+=(-L)
+options+=($HTTP_VERSION)
+options+=(-H 'Cache-Control: no-cache')
+options+=(-w 'echo TTFB: $(echo %{time_starttransfer} - %{time_pretransfer} | bc) CD: $(echo %{time_total} - %{time_starttransfer} | bc) TTFB+CD: $(echo %{time_total} - %{time_pretransfer} | bc) \n')
+request=$(eval $(curl "${options[@]}" "$1"))
+echo $request
+
+#awk version
+#curl -w "%{time_total} %{time_starttransfer} %{time_appconnect}" -s -o /dev/null https://example.com | awk -F' ' '{print "TotalTime: " $1 " TTFB: " (($2-$3));}'
